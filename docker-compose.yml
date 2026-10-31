@@ -1,0 +1,32 @@
+name: fae-portal
+
+services:
+  frontend-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-}
+        EXPO_PUBLIC_SESSION_MODE: ${EXPO_PUBLIC_SESSION_MODE:-}
+        EXPO_PUBLIC_WS_URL: ${EXPO_PUBLIC_WS_URL:-}
+    image: faceattend/frontend-web:${FACEATTEND_IMAGE_TAG:-latest}
+    container_name: fae-frontend-web
+    mem_limit: 128m
+    cpus: "0.5"
+    ports:
+      - "0.0.0.0:${FRONTEND_PORT:-8090}:8080"
+    networks:
+      fae-edge:
+        ipv4_address: 10.204.10.100
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  fae-edge:
+    external: true
+    name: fae-edge

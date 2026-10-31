@@ -1,0 +1,850 @@
+// ============================================================
+//  FaceAttend EDU — RegisterStudentModal
+//  Modal para registrar un nuevo estudiante.
+//  Usa TextInput y AnimatedDropdown de componentes comunes.
+//  La validación se hace en el ViewModel, no aquí.
+// ============================================================
+
+import React, { useState, useMemo } from "react";
+import {
+    View, Text, TouchableOpacity, ActivityIndicator,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { Button, AnimatedDropdown, BaseModal, TextInput, PasswordInput, Checkbox } from "../common";
+import { DateInput } from "../common/inputs/DateInput";
+import { useTheme }               from "../hooks/useTheme";
+import { useResponsive }          from "../hooks/useResponsive";
+import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
+import { useAppData }             from "../../../context/AppDataContext";
+import { useAuth }                from "../../../context/AuthContext";
+import { academicApi }            from "../../../services/api/academicApi";
+import { listActors }             from "../../../services/api/referenceData";
+import { documentTypesForRole }   from "../../../services/api/staffProvisioning";
+import { birthDateError }         from "../../../core/utils/validation";
+import { ACTOR_CODE_BY_ROLE, nextActorCode } from "../../../core/utils/actorCodes";
+import BiometricEnrollmentModal    from "./BiometricEnrollmentModal";
+import {
+    EMPTY_FORM,
+    validateStudentForm,
+} from "../../../viewmodels/useStudentsViewModel";
+
+// ── Roles disponibles ────────────────────────────────────
+
+const ROLE_ITEMS = [
+    { value: "admin",   label: "Administrador", description: "Admin",    icon: "shield"    },
+    { value: "teacher", label: "Docente",       description: "Teacher",  icon: "book-open" },
+    { value: "student", label: "Estudiante",    description: "Student",  icon: "user"      },
+];
+
+// ── Componente principal ─────────────────────────────────
+
+export default function RegisterStudentModal({
+    visible,
+    onClose,
+    onSubmit,
+    initialRole = null, // null = modo genérico, "student"/"teacher"/"admin" = modo específico
+    getCohortsForCourse = null, // Fichas del curso (backend) para matrícula
+    onBiometricsEnrolled = null, // (personId, { hasFacial, hasFingerprint }) tras capturar la biometría
+}) {
+    const { theme }   = useTheme();
+    const { isSmall } = useResponsive();
+    const { t }       = useTranslation();
+    const c           = theme.colors;
+    const appData     = useAppData();
+    const { user }    = useAuth();
+    // Admin de sede: su user.schoolId viene de su academic_actor y acota todo.
+    // Super Admin (schoolId nulo) conserva la vista global y elige sede libre.
+    const isScopedAdmin = user?.schoolId != null;
+
+    const [form,          setForm]          = useState({ ...EMPTY_FORM, role: initialRole || "" });
+    // Docente y administrador reciben código de sede; el estudiante, de su ficha.
+    const hasAutoActorCode = Object.hasOwn(ACTOR_CODE_BY_ROLE, form.role);
+    const isCodeAuto = form.role === "student" || hasAutoActorCode;
+    const [error,        setError]         = useState(null);
+    const [saving,        setSaving]        = useState(false);
+    const [showErrors,    setShowErrors]    = useState(false);
+    const [success,       setSuccess]       = useState(false);
+    const [credentialsEmail, setCredentialsEmail] = useState(null); // SENT | SKIPPED | FAILED
+    const [enrollment,    setEnrollment]    = useState(null); // { person, wantFace, wantFingerprint } tras el alta
+    const [fichaSearch,   setFichaSearch]   = useState(""); // Para búsqueda de fichas
+    const [schoolItems,   setSchoolItems]   = useState([]); // Sedes (vínculo del admin)
+    const [schoolsError,  setSchoolsError]  = useState(null);
+    const [cohortItems,   setCohortItems]   = useState([]); // Fichas del curso (matrícula)
+
+    // Generar items de fichas desde los cursos disponibles
+    const fichaItems = useMemo(() => {
+        if (!appData.courses || appData.courses.length === 0) return [];
+
+        // Los códigos se repiten entre sedes: se pinta uno solo por código.
+        const seen = new Set();
+        return appData.courses
+            .filter(course => course.status === "active")
+            .filter(course => {
+                if (seen.has(course.code)) return false;
+                seen.add(course.code);
+                return true;
+            })
+            .map(course => ({
+                value: course.code,
+                label: course.name,
+                description: `Ficha ${course.code}`,
+                icon: "book-open",
+            }));
+    }, [appData.courses]);
+
+    // Filtrar fichas según búsqueda
+    const filteredFichaItems = useMemo(() => {
+        if (!fichaSearch.trim()) return fichaItems.slice(0, 5); // Máximo 5 por defecto
+        
+        const query = fichaSearch.toLowerCase();
+        return fichaItems
+            .filter(item => 
+                item.label.toLowerCase().includes(query) ||
+                item.value.toLowerCase().includes(query)
+            )
+            .slice(0, 5); // Máximo 5 resultados
+    }, [fichaItems, fichaSearch]);
+
+    // Calcular código estudiantil auto-incremental cuando se selecciona una ficha
+    // Formato: códigoCurso + "00" + n (ej: "AED-401001", "AED-401002", ..., "AED-40120", etc.)
+    // donde "00" es fijo y "n" es el número incremental (1, 2, 3, ..., 20, ..., 100)
+    const generateStudentCode = (fichaCode) => {
+        if (!fichaCode || !appData.students) return "";
+        
+        // Buscar todos los estudiantes que pertenecen a esta ficha
+        // El patrón esperado es: fichaCode + "00" + n
+        const prefix = `${fichaCode}00`;
+        const studentsInFicha = appData.students.filter(s => 
+            s.code && s.code.startsWith(prefix)
+        );
+        
+        // Extraer el número "n" de cada código y encontrar el máximo
+        let maxNumber = 0;
+        studentsInFicha.forEach(s => {
+            // Remover el prefijo completo (fichaCode + "00") y obtener solo el número incremental
+            const numberPart = s.code.substring(prefix.length);
+            const num = Number.parseInt(numberPart, 10);
+            if (!Number.isNaN(Number(num)) && num > maxNumber) {
+                maxNumber = num;
+            }
+        });
+        
+        // Incrementar (1, 2, 3, ..., 20, ..., 100)
+        const nextNumber = maxNumber + 1;
+        
+        // Formato final: fichaCode + "00" + nextNumber
+        return `${fichaCode}00${nextNumber}`;
+    };
+
+    // Sedes para el vínculo del administrador (actor ADMIN).
+    React.useEffect(() => {
+        if (!visible) return;
+        let cancelled = false;
+        setSchoolsError(null);
+        academicApi.listSchools().then(
+            (list) => {
+                if (cancelled) return;
+                const rows = Array.isArray(list) ? list : list?.content ?? [];
+                setSchoolItems(
+                    rows
+                        .map((s) => ({
+                            value: String(s?.schoolId ?? s?.school_id ?? ""),
+                            label: s?.name ?? s?.code ?? "",
+                            description: s?.code ?? "",
+                            icon: "map-pin",
+                        }))
+                        .filter((item) => item.value && item.label)
+                );
+            },
+            (e) => {
+                if (!cancelled) {
+                    setSchoolItems([]);
+                    setSchoolsError(e?.message || "No se pudieron cargar las sedes");
+                }
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible]);
+
+    // Autogenerar el código del docente/administrador según su sede. El campo
+    // queda deshabilitado: el sistema asigna DOC-{sede}-NNN / ADM-{sede}-NNN.
+    React.useEffect(() => {
+        if (!visible || !hasAutoActorCode) return;
+        const schoolId = String(form.schoolId ?? "");
+        if (!schoolId) return;
+        let cancelled = false;
+        const role = form.role;
+        listActors().then(
+            (actors) => {
+                if (cancelled) return;
+                const school = schoolItems.find((s) => s.value === schoolId);
+                const schoolShort = String(school?.description ?? "").split("-")[0] || "SED";
+                const code = nextActorCode(Array.isArray(actors) ? actors : [], { role, schoolId, schoolShort });
+                setForm((prev) => (prev.role === role ? { ...prev, code } : prev));
+            },
+            () => {}
+        );
+        return () => { cancelled = true; };
+    }, [visible, form.role, form.schoolId, schoolItems]);
+
+    // Sincronizar el rol del formulario cuando cambia initialRole (solo si el modal se abre de nuevo)
+    React.useEffect(() => {
+        if (visible && initialRole !== null && form.role !== initialRole) {
+            setForm(prev => ({ ...prev, role: initialRole }));
+        }
+        // Preseleccionar la sede del creador (el super admin global la elige).
+        if (visible && user?.schoolId != null) {
+            setForm(prev => (prev.schoolId ? prev : { ...prev, schoolId: String(user.schoolId) }));
+        }
+    }, [initialRole, visible, user]);
+
+    // Fichas vigentes del curso elegido (matrícula del estudiante).
+    React.useEffect(() => {
+        if (!visible || form.role !== "student" || !form.course || !getCohortsForCourse) {
+            setCohortItems([]);
+            return;
+        }
+        let cancelled = false;
+        getCohortsForCourse(form.course).then(
+            (list) => {
+                if (cancelled) return;
+                const options = (Array.isArray(list) ? list : []).map((c) => ({
+                    value: String(c.cohortId),
+                    label: c.code || String(c.cohortId),
+                    icon: "users",
+                }));
+                setCohortItems(options);
+                if (options.length === 1) {
+                    setForm((prev) => ({ ...prev, cohortId: options[0].value }));
+                }
+            },
+            () => {
+                if (!cancelled) setCohortItems([]);
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, form.role, form.course, getCohortsForCourse]);
+
+    const setField = (key, value) => {
+        setForm((prev) => {
+            const updated = { ...prev, [key]: value };
+
+            // Cambio de rol: el código autogenerado y la matrícula son del rol
+            // anterior; el administrador no lleva ficha ni curso.
+            if (key === "role" && value !== prev.role) {
+                updated.code = "";
+                if (value === "admin") {
+                    updated.course = "";
+                    updated.cohortId = "";
+                }
+                if (!documentTypesForRole(value).includes(updated.documentType)) updated.documentType = "";
+            }
+
+            // Auto-generar código estudiantil en dos casos:
+            // 1. Cuando se selecciona una ficha/curso Y el rol es "student"
+            // 2. Cuando se cambia el rol a "student" Y ya hay una ficha seleccionada
+            const shouldGenerateCode =
+                (key === "course" && value && updated.role === "student" && !String(updated.code ?? "").trim()) ||
+                (key === "role" && value === "student" && updated.course && !String(updated.code ?? "").trim());
+             
+            if (shouldGenerateCode) {
+                const fichaCode = key === "course" ? value : updated.course;
+                const generatedCode = generateStudentCode(fichaCode);
+                if (generatedCode) {
+                    updated.code = generatedCode;
+                }
+            }
+             
+            return updated;
+        });
+        if (showErrors) setError(null);
+    };
+
+    const handleClose = () => {
+        setForm({ ...EMPTY_FORM, role: initialRole || "" });
+        setError(null);
+        setShowErrors(false);
+        setSuccess(false);
+        setCredentialsEmail(null);
+        onClose();
+    };
+
+    const handleSubmit = async () => {
+        setShowErrors(true);
+        setError(null);
+
+        // Validación — la función es importada estáticamente
+        const validationErr = validateStudentForm(form);
+        if (validationErr) {
+            setError(validationErr);
+            return;
+        }
+
+        // Ya no validamos biometría aquí, los campos son opcionales
+        await doSave(form);
+    };
+
+    const doSave = async (formToSave) => {
+        setSaving(true);
+        setError(null);
+        const result = await onSubmit(formToSave);
+        setSaving(false);
+        // Una cadena es un error; un objeto { credentialsEmail } es un alta exitosa.
+        if (typeof result === "string" && result) {
+            setError(t(result));
+        } else if (result?.personId && (result.wantFace || result.wantFingerprint)) {
+            // El usuario ya existe: la biometría se captura ahora con su personId real.
+            setEnrollment({
+                person: { personId: result.personId, name: formToSave.name },
+                wantFace: result.wantFace,
+                wantFingerprint: result.wantFingerprint,
+            });
+        } else {
+            const emailStatus = result?.credentialsEmail ?? null;
+            setCredentialsEmail(emailStatus);
+            setSuccess(true);
+            // Con aviso de correo se deja más tiempo para leerlo.
+            setTimeout(() => {
+                setForm(EMPTY_FORM);
+                setShowErrors(false);
+                setSuccess(false);
+                setCredentialsEmail(null);
+                onClose();
+            }, emailStatus ? 3200 : 900);
+        }
+    };
+
+    const finishEnrollment = () => {
+        setEnrollment(null);
+        setForm(EMPTY_FORM);
+        setShowErrors(false);
+        setSuccess(false);
+        setCredentialsEmail(null);
+        onClose();
+    };
+
+    const isEmpty = (v) => showErrors && !v.trim();
+
+    // Configuración dinámica según el rol (incluyendo modo genérico)
+    const roleConfig = {
+        "": {
+            // Modo genérico cuando no hay rol seleccionado
+            title: t("Nuevo usuario"),
+            subtitle: t("Completa los datos del usuario"),
+            icon: "user-plus",
+            buttonLabel: t("Registrar usuario"),
+            successMessage: t("Usuario registrado correctamente"),
+            codeLabel: t("Código"),
+            codePlaceholder: t("Ej: AED-401001 o PROF001"),
+            programLabel: t("Programa/Departamento"),
+            programPlaceholder: t("Ej: Ingeniería de Sistemas"),
+            showProgram: true,
+            showFaceRegistration: true,
+            rolePlaceholder: t("¿Selecciona cuál?"),
+        },
+        student: {
+            title: t("Nuevo estudiante"),
+            subtitle: t("Completa los datos del estudiante"),
+            icon: "user-plus",
+            buttonLabel: t("Registrar estudiante"),
+            successMessage: t("Estudiante registrado correctamente"),
+            codeLabel: t("Código estudiantil"),
+            codePlaceholder: t("Se genera automáticamente"),
+            programLabel: t("Ficha/Curso"),
+            programPlaceholder: t("Seleccionar ficha/curso"),
+            showProgram: true,
+            showFaceRegistration: true,
+            rolePlaceholder: null,
+        },
+        teacher: {
+            title: t("Nuevo docente"),
+            subtitle: t("Completa los datos del docente"),
+            icon: "book-open",
+            buttonLabel: t("Registrar docente"),
+            successMessage: t("Docente registrado correctamente"),
+            codeLabel: t("Código docente"),
+            codePlaceholder: t("Se genera automáticamente"),
+            programLabel: t("Ficha/Curso asignado"),
+            programPlaceholder: t("Seleccionar ficha/curso"),
+            showProgram: true,
+            showFaceRegistration: true,
+            rolePlaceholder: null,
+        },
+        admin: {
+            title: t("Nuevo administrador"),
+            subtitle: t("Completa los datos del administrador"),
+            icon: "shield",
+            buttonLabel: t("Registrar administrador"),
+            successMessage: t("Administrador registrado correctamente"),
+            codeLabel: t("Código de administrador"),
+            codePlaceholder: t("Se genera automáticamente"),
+            programLabel: t("Área"),
+            programPlaceholder: t("Ej: Administración General"),
+            showProgram: false,
+            showFaceRegistration: false,
+            rolePlaceholder: null,
+        },
+    };
+
+    const config = roleConfig[form.role] || roleConfig[""];
+
+    // �tems de estado
+    const statusItems = [
+        { value: "active", label: t("Activo"),   icon: "check-circle" },
+        { value: "inactive", label: t("Inactivo"), icon: "x-circle"     },
+    ];
+
+    if (!visible) return null;
+
+    return (
+        <React.Fragment>
+            <BaseModal
+                visible={visible && !enrollment}
+                onClose={handleClose}
+                title={config.title}
+                subtitle={config.subtitle}
+                icon={config.icon}
+                maxWidth={520}
+                footer={
+                    <React.Fragment>
+                        <Button variant="ghost" onPress={handleClose} disabled={saving}>
+                            {t("Cancelar")}
+                        </Button>
+                        <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
+                            {saving
+                                ? <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
+                                : success
+                                    ? <React.Fragment><Feather name="check" size={14} color={c.brand.textOnPrimary} /> {t("¡Guardado!")}</React.Fragment>
+                                    : config.buttonLabel}
+                        </Button>
+                    </React.Fragment>
+                }
+            >
+                {/* Error global */}
+                {error && (
+                    <View style={{
+                        backgroundColor: c.status.dangerLight,
+                        borderRadius: 14,
+                        padding: 12,
+                        flexDirection: "row",
+                        gap: 8,
+                        marginBottom: 14,
+                    }}>
+                        <Feather name="alert-circle" size={14} color={c.status.danger} />
+                        <Text style={{ fontSize: 11, color: c.status.danger, flex: 1 }}>{error}</Text>
+                    </View>
+                )}
+
+                {success && (
+                    <View style={{
+                        backgroundColor: c.status.successLight,
+                        borderRadius: 14,
+                        padding: 12,
+                        flexDirection: "row",
+                        gap: 8,
+                        marginBottom: 14,
+                    }}>
+                        <Feather name="check-circle" size={14} color={c.status.success} />
+                        <Text style={{ fontSize: 11, color: c.status.success, flex: 1 }}>
+                            {config.successMessage}
+                            {credentialsEmail === "SENT" ? " — " + t("Las credenciales se enviaron por correo.") : ""}
+                            {credentialsEmail === "FAILED" ? " — " + t("No se pudo enviar el correo: entrega la contraseña por otro medio.") : ""}
+                            {credentialsEmail === "SKIPPED" ? " — " + t("No se envió el correo (sin correo registrado): entrega la contraseña por otro medio.") : ""}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Fila 1 — Nombre y Código */}
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12, marginBottom: 18 }}>
+                    <View style={{ flex: 1 }}>
+                        <TextInput
+                            label={t("Nombre completo") + " *"}
+                            value={form.name}
+                            onChangeText={v => setField("name", v)}
+                            placeholder={t("Ej: Ana García López")}
+                            error={isEmpty(form.name)}
+                            errorMessage={isEmpty(form.name) ? t("Campo requerido") : ""}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <TextInput
+                            label={config.codeLabel + " *"}
+                            value={form.code}
+                            onChangeText={v => setField("code", v)}
+                            placeholder={config.codePlaceholder}
+                            disabled={isCodeAuto}
+                            error={isEmpty(form.code)}
+                            errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
+                            helperText={isCodeAuto ? t("Se genera automáticamente") : ""}
+                        />
+                    </View>
+                </View>
+
+                {/* Correo */}
+                <TextInput
+                    label={t("Correo electrónico") + " *"}
+                    value={form.email}
+                    onChangeText={v => setField("email", v)}
+                    placeholder={t("correo@universidad.edu")}
+                    type="email"
+                    error={isEmpty(form.email)}
+                    errorMessage={isEmpty(form.email) ? t("Campo requerido") : ""}
+                />
+
+                {/* Documento y contraseña: el backend los exige para crear
+                    persona y usuario en todos los roles */}
+                {form.role && (
+                    <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12, marginBottom: 18 }}>
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                label={t("Número de documento") + " *"}
+                                value={form.documentNumber}
+                                onChangeText={v => setField("documentNumber", v)}
+                                placeholder={t("Ej: 1234567890")}
+                                error={isEmpty(form.documentNumber)}
+                                errorMessage={isEmpty(form.documentNumber) ? t("Campo requerido") : ""}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <PasswordInput
+                                label={t("Contraseña temporal") + " *"}
+                                value={form.password}
+                                onChangeText={v => setField("password", v)}
+                                placeholder={t("Mínimo 8 caracteres")}
+                                error={showErrors && String(form.password ?? "").length < 8}
+                                errorMessage={showErrors && String(form.password ?? "").length < 8 ? t("Mínimo 8 caracteres") : ""}
+                                helperText={form.sendCredentials !== false
+                                    ? t("Se enviará por correo y deberá cambiarla al ingresar")
+                                    : t("Entrégala al usuario por otro medio")}
+                            />
+                        </View>
+                    </View>
+                )}
+
+                {/* Ley 1581: aceptación del aviso (obligatoria) y autorización biométrica (facultativa) */}
+                {form.role && (
+                    <View style={{ marginBottom: 18, gap: 8 }}>
+                        <Checkbox
+                            checked={form.privacyAccepted === true}
+                            onToggle={(v) => setField("privacyAccepted", v)}
+                            label={t("La persona aceptó el aviso de privacidad") + " *"}
+                            description={t("Tratamiento de sus datos personales para el control de asistencia (Ley 1581 de 2012).")}
+                        />
+                        <Checkbox
+                            checked={form.biometricAccepted === true}
+                            onToggle={(v) => setField("biometricAccepted", v)}
+                            label={t("Autoriza el tratamiento de sus datos biométricos (facultativo)")}
+                            description={t("Rostro y huella para tomar asistencia. Sin esta autorización no se pueden registrar.")}
+                        />
+                        {showErrors && form.privacyAccepted !== true && (
+                            <Text style={{ color: c.status.danger, fontSize: 12 }}>
+                                {t("Confirma que la persona aceptó el aviso de privacidad")}
+                            </Text>
+                        )}
+                    </View>
+                )}
+
+                {/* Enviar usuario y contraseña inicial por correo (Fase 1) */}
+                {form.role && (
+                    <View style={{ marginBottom: 18 }}>
+                        <Checkbox
+                            checked={form.sendCredentials !== false}
+                            onToggle={(v) => setField("sendCredentials", v)}
+                            label={t("Enviar credenciales por correo")}
+                            description={t("Usuario y contraseña inicial al correo de la persona")}
+                        />
+                    </View>
+                )}
+
+                {/* Datos adicionales de la persona (opcionales, PersonDto) */}
+                {form.role && (
+                    <View style={{ gap: 0 }}>
+                        <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flex: 1, marginBottom: 2 }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.secondary,
+                                    marginBottom: 6,
+                                }}>
+                                    {t("Tipo de documento")}
+                                </Text>
+                                <AnimatedDropdown
+                                    items={documentTypesForRole(form.role).map((d) => ({ value: d, label: d, icon: "credit-card" }))}
+                                    value={form.documentType}
+                                    onSelect={v => setField("documentType", v)}
+                                    placeholder={t("Seleccionar tipo")}
+                                    triggerHeight={48}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <TextInput
+                                    label={t("Teléfono")}
+                                    type="phone"
+                                    value={form.phone}
+                                    onChangeText={v => setField("phone", v)}
+                                    placeholder={t("Ej: 3001234567")}
+                                />
+                            </View>
+                        </View>
+                        <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                            <View style={{ flex: 1, marginBottom: 2 }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: "600",
+                                    color: c.text.secondary,
+                                    marginBottom: 6,
+                                }}>
+                                    {t("Tipo de sangre")}
+                                </Text>
+                                <AnimatedDropdown
+                                    items={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((b) => ({ value: b, label: b, icon: "droplet" }))}
+                                    value={form.bloodType}
+                                    onSelect={v => setField("bloodType", v)}
+                                    placeholder={t("Seleccionar tipo")}
+                                    triggerHeight={48}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <DateInput
+                                    label={t("Nacimiento")}
+                                    value={form.birthDate}
+                                    onChangeText={v => setField("birthDate", v)}
+                                    error={showErrors && !!birthDateError(form.birthDate)}
+                                    errorMessage={t(birthDateError(form.birthDate) ?? "")}
+                                />
+                            </View>
+                        </View>
+                        <TextInput
+                            label={t("Dirección")}
+                            value={form.address}
+                            onChangeText={v => setField("address", v)}
+                            placeholder={t("Ej: Calle 10 # 5-20")}
+                        />
+                    </View>
+                )}
+
+                {/* Sede del docente/administrador (vínculo a sede vía actor) */}
+                {(form.role === "admin" || form.role === "teacher") && (
+                    <View style={{ marginBottom: 2 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: (showErrors && !form.schoolId) || schoolsError ? c.status.error : c.text.secondary,
+                            marginBottom: 6,
+                        }}>
+                            {t("Sede") + " *"}
+                        </Text>
+                        <AnimatedDropdown
+                            items={schoolItems}
+                            value={form.schoolId}
+                            onSelect={v => setField("schoolId", v)}
+                            placeholder={t("Seleccionar sede")}
+                            searchable={!isScopedAdmin}
+                            searchPlaceholder={t("Buscar...")}
+                            triggerIcon="map-pin"
+                            disabled={isScopedAdmin}
+                            error={showErrors && !form.schoolId}
+                            triggerHeight={48}
+                        />
+                        {isScopedAdmin && (
+                            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 4 }}>
+                                {t("Solo puedes crear usuarios en tu sede.")}
+                            </Text>
+                        )}
+                        {schoolsError && (
+                            <Text style={{ fontSize: 12, color: c.status.error, marginTop: 4 }}>
+                                {schoolsError}
+                            </Text>
+                        )}
+                    </View>
+                )}
+
+                {/* Ficha de matrícula (si el curso tiene varias vigentes) */}
+                {form.role === "student" && cohortItems.length > 1 && (
+                    <View style={{ marginBottom: 2 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: showErrors && !form.cohortId ? c.status.error : c.text.secondary,
+                            marginBottom: 6,
+                        }}>
+                            {t("Ficha") + " *"}
+                        </Text>
+                        <AnimatedDropdown
+                            items={cohortItems}
+                            value={form.cohortId}
+                            onSelect={v => setField("cohortId", v)}
+                            placeholder={t("Seleccionar ficha")}
+                            triggerIcon="users"
+                            error={showErrors && !form.cohortId}
+                            triggerHeight={48}
+                        />
+                    </View>
+                )}
+
+                {/* Fila 2 — Programa/Departamento y Rol */}
+                <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                    {config.showProgram && (
+                        <View style={{ flex: 1 }}>
+                            {/* Dropdown con búsqueda para todos los roles excepto admin */}
+                            <Text style={{
+                                fontSize: 14,
+                                fontWeight: "600",
+                                color: showErrors && !form.course ? c.status.error : c.text.secondary,
+                                marginBottom: 6,
+                            }}>
+                                {config.programLabel + " *"}
+                            </Text>
+                            <AnimatedDropdown
+                                items={fichaItems}
+                                value={form.course}
+                                onSelect={v => setField("course", v)}
+                                placeholder={t("Seleccionar ficha/curso")}
+                                searchable={true}
+                                searchPlaceholder={t("Buscar...")}
+                                maxVisible={5}
+                                triggerIcon="book-open"
+                                error={showErrors && !form.course}
+                                triggerHeight={48}
+                            />
+                        </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: showErrors && !form.role ? c.status.error : c.text.secondary,
+                            marginBottom: 6,
+                        }}>
+                            {t("Rol") + " *"}
+                        </Text>
+                        <AnimatedDropdown
+                            items={ROLE_ITEMS.map(r => ({
+                                value:       r.value,
+                                label:       t(r.label),
+                                description: t(r.description),
+                                icon:        r.icon,
+                            }))}
+                            value={form.role}
+                            onSelect={v => setField("role", v)}
+                            placeholder={config.rolePlaceholder || t("Seleccionar rol")}
+                            error={showErrors && !form.role}
+                            // Con Administrador elegido el rol queda fijo: evita mezclar
+                            // datos de administrador con ficha/curso de otro rol.
+                            disabled={form.role === "admin"}
+                            triggerHeight={48}
+                        />
+                        {form.role === "admin" && (
+                            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 4 }}>
+                                {t("Para elegir otro rol, cierra y vuelve a abrir el formulario.")}
+                            </Text>
+                        )}
+                    </View>
+                </View>
+
+                {/* Estado */}
+                <View style={{ marginBottom: 14 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
+                        {t("Estado")}
+                    </Text>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                        {statusItems.map((s) => (
+                            <TouchableOpacity
+                                key={s.value}
+                                onPress={() => setField("status", s.value)}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
+                                    borderRadius: 14,
+                                    borderWidth: 1.5,
+                                    borderColor: form.status === s.value
+                                        ? c.brand.primary
+                                        : c.border.primary,
+                                    backgroundColor: form.status === s.value
+                                        ? c.brand.primaryLight
+                                        : c.background.app,
+                                }}
+                            >
+                                <View style={{
+                                    width: 14,
+                                    height: 14,
+                                    borderRadius: 14,
+                                    backgroundColor: form.status === s.value
+                                        ? c.brand.primary
+                                        : c.interactive.disabled,
+                                }} />
+                                <Text style={{
+                                    fontSize: 13,
+                                    fontWeight: "600",
+                                    color: form.status === s.value
+                                        ? c.brand.primary
+                                        : c.text.secondary,
+                                }}>
+                                    {s.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
+                {/* Registro biométrico (solo para estudiantes y docentes) */}
+                {config.showFaceRegistration && (
+                    <View style={{
+                        padding: 14,
+                        borderWidth: 1.5,
+                        borderColor: c.border.primary,
+                        borderRadius: 14,
+                        marginBottom: 14,
+                        backgroundColor: c.background.app,
+                        gap: 12,
+                    }}>
+                        <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                            {t("Reconocimiento biométrico")}
+                        </Text>
+                        
+                        {/* Checkbox Facial */}
+                        <Checkbox
+                            checked={!!form.hasFacial}
+                            onToggle={(v) => setField("hasFacial", v)}
+                            variant="success"
+                            label={t("Registrar rostro al terminar")}
+                            description={t("Se captura con prueba de vida justo después de crear el usuario")}
+                        />
+                        
+                        {/* Checkbox Huella */}
+                        <Checkbox
+                            checked={!!form.hasFingerprint}
+                            onToggle={(v) => setField("hasFingerprint", v)}
+                            variant="success"
+                            label={t("Registrar huella dactilar al terminar")}
+                            description={t("Eliges el dedo y usas el lector DigitalPersona justo después de crear el usuario")}
+                        />
+                    </View>
+                )}
+
+                <Text style={{ fontSize: 12, color: c.text.secondary, textAlign: "right" }}>
+                    * {t("Campos obligatorios")}
+                </Text>
+            </BaseModal>
+
+            {/* Captura biométrica real, una vez creado el usuario */}
+            <BiometricEnrollmentModal
+                visible={!!enrollment}
+                person={enrollment?.person}
+                wantFace={!!enrollment?.wantFace}
+                wantFingerprint={!!enrollment?.wantFingerprint}
+                onFinished={(flags) => onBiometricsEnrolled?.(enrollment?.person?.personId, flags)}
+                onClose={finishEnrollment}
+            />
+        </React.Fragment>
+    );
+}
+

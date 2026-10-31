@@ -1,0 +1,101 @@
+npm notice run FaceAttend-EDU@1.0.0 qa
+npm notice run node tools/qa/run.mjs
+▶ Preflight
+  ✔ 11 contenedores arriba
+  ✔ web http://localhost:8090 responde
+  ✔ gateway http://localhost:8000/api/v1 y login funcionan
+
+▶ L1 · API
+L1 API: 105 PASS · 8 FAIL · 5 DUDA · 25 BLOQUEADO
+  FAIL NEG-A19 [Bloqueante] GET /auth/me → 200 acción prohibida ejecutada · GET /auth/me es público en Kong y devuelve personId, estado y último acceso de cualquier usuario
+  FAIL NEG-B27 [Bloqueante] DELETE /courses/58 → 204 acción prohibida ejecutada
+  FAIL NEG-C03 [Bloqueante] PUT /persons/e91fa255-b786-45c7-b9fb-58a6eae008d9 → 200 acción prohibida ejecutada
+  FAIL NEG-C04 [Bloqueante] PATCH /users/bb02db16-83e2-4891-bda0-fcc9c9c528d2/status → 204 acción prohibida ejecutada
+  FAIL NEG-C17-03 [Bloqueante] PUT /persons/9c2e72e6-7757-45c3-9e18-752eb5ff7d92 → 200 acción prohibida ejecutada
+  FAIL NEG-C17-04 [Bloqueante] PATCH /users/c5c08567-bc84-4349-9184-c12a13dd521b/status → 204 acción prohibida ejecutada
+  FAIL NEG-D02 [Alta] POST /persons → 201 entrada inválida aceptada
+  FAIL NEG-D10 [Alta] POST /persons → 500 error 5xx
+
+▶ L2 · UI
+  Super Admin /app → PASS
+  Super Admin /app/schools → PASS
+  Super Admin /app/users → PASS
+  Super Admin /app/users/students → PASS
+  Super Admin /app/users/teachers → PASS
+  Super Admin /app/users/admins → PASS
+  Super Admin /app/roles → PASS
+  Super Admin /app/reports → PASS
+  Super Admin /app/history → PASS
+  Super Admin /app/alerts → FAIL
+  Super Admin /app/settings → PASS
+  Super Admin /app/courses → PASS
+  Super Admin /app/environments → PASS
+  Super Admin /app/academic → PASS
+  Super Admin /app/justifications → PASS
+  Super Admin /app/kiosk → DUDA
+  Super Admin /app/biometrics → DUDA
+  Super Admin /app/contacts → DUDA
+  Super Admin /app/school-info → DUDA
+  Super Admin /app/ruta-que-no-existe → DUDA
+  Admin /app → PASS
+  Admin /app/users → PASS
+  Admin /app/users/students → PASS
+  Admin /app/users/teachers → PASS
+  Admin /app/users/admins → PASS
+  Admin /app/courses → PASS
+  Admin /app/environments → PASS
+  Admin /app/academic → PASS
+  Admin /app/history → PASS
+  Admin /app/justifications → FAIL
+  Admin /app/alerts → PASS
+  Admin /app/reports → PASS
+  Admin /app/settings → PASS
+  Admin /app/kiosk → PASS
+  Admin /app/schools → PASS
+  Admin /app/roles → PASS
+  Admin /app/biometrics → DUDA
+  Admin /app/contacts → DUDA
+  Admin /app/school-info → DUDA
+  Docente /app → PASS
+  Docente /app/users → PASS
+  Docente /app/courses → PASS
+  Docente /app/environments → PASS
+  Docente /app/history → PASS
+  Docente /app/justifications → DUDA
+  Docente /app/alerts → PASS
+  Docente /app/reports → PASS
+  Docente /app/settings → PASS
+  Docente /app/kiosk → PASS
+  Docente /app/schools → PASS
+  Docente /app/roles → PASS
+  Docente /app/academic → PASS
+  Docente /app/users/teachers → DUDA
+  Docente /app/users/admins → DUDA
+  Docente /app/biometrics → DUDA
+  Docente /app/contacts → DUDA
+  Docente /app/school-info → DUDA
+  Estudiante /app → PASS
+  Estudiante /app/history → PASS
+  Estudiante /app/justifications → PASS
+  Estudiante /app/courses → PASS
+  Estudiante /app/academic → PASS
+  Estudiante /app/alerts → PASS
+  Estudiante /app/settings → PASS
+  Estudiante /app/users → PASS
+  Estudiante /app/users/students → PASS
+  Estudiante /app/environments → PASS
+  Estudiante /app/reports → PASS
+  Estudiante /app/kiosk → PASS
+  Estudiante /app/schools → PASS
+  Estudiante /app/roles → PASS
+  Estudiante /app/settings/general → DUDA
+  Estudiante /app/biometrics → PASS
+  Estudiante /app/contacts → DUDA
+  Estudiante /app/school-info → DUDA
+L2 UI: 60 PASS · 2 FAIL · 17 DUDA · 0 BLOQUEADO
+  FAIL L2-SUP-/app/alerts [Media] con contenido · texto inválido en pantalla: undefined
+  FAIL L2-ADM-/app/justifications [Alta] con contenido · 5xx: GET /api/v1/justification-types → 503
+
+■ Resumen: 165 PASS · 10 FAIL · 22 DUDA · 25 BLOQUEADO
+  docs/revision/resultados/RESUMEN.md
+exit=1

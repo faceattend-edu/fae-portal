@@ -1,0 +1,242 @@
+// ============================================================
+//  FaceAttend EDU — useBiometricsViewModel
+//
+//  Estado compartido de la pantalla «Biometría»: persona seleccionada,
+//  estado/mensajes y resumen biométrico (rostro/huella) de esa persona.
+//  ms-biometric está indexado por person_id (UUID), no por username, así
+//  que la identidad ya no es un texto libre: se elige con PersonAutocomplete
+//  (ver BiometricsView). La captura de rostro y de huella viven en
+//  useFaceCapture / useFingerprintReader (se montan solo cuando su
+//  módulo está visible, para soltar cámara y lector al salir).
+// ============================================================
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { consentApi } from "../services/api/consentApi";
+import { termsApi } from "../services/api/termsApi";
+import { resolveTermsGate, TERMS_GATE } from "../core/utils/termsGate";
+import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+
+// ms-biometric rechaza (403) a quien aún no aceptó los términos / no tiene acudiente.
+const PERSON_NOT_ENABLED = "PERSON_NOT_ENABLED";
+
+export const BIOMETRIC_SECTIONS = ["face-register", "face-login", "fingerprint"];
+export const DEFAULT_BIOMETRIC_SECTION = "face-register";
+
+export function normalizeBiometricSection(section) {
+    return BIOMETRIC_SECTIONS.includes(section) ? section : DEFAULT_BIOMETRIC_SECTION;
+}
+
+export function useBiometricsViewModel() {
+    const { t } = useTranslation();
+
+    // La persona a registrar/verificar se elige del directorio (PersonAutocomplete),
+    // no se precarga con la sesión del operador: quien usa esta pantalla es un
+    // admin/profesor registrando a OTRA persona (estudiante), no a sí mismo.
+    const [person, setPersonState] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [status, setStatusState] = useState({
+        text: t("Elige un módulo, selecciona una persona y sigue las instrucciones."),
+        tone: "info",
+    });
+    const [health, setHealth] = useState("checking"); // checking | ok | down
+    const [summary, setSummary] = useState(null); // { has_face, has_fingerprint } | null
+    // Ley 1581: autorización biométrica de la persona elegida (null = aún no se sabe).
+    const [biometricAuthorized, setBiometricAuthorized] = useState(null);
+    // Términos/acudiente de la persona elegida: { gate, step, minor } | null (aún no se sabe).
+    // La captura exige que identity la dé por habilitada; si no, se explica el paso pendiente
+    // en lugar de dejar capturar para recibir un 403.
+    const [termsPending, setTermsPending] = useState(null);
+    const mounted = useRef(true);
+
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
+
+    const setStatus = useCallback((text, tone = "info") => {
+        if (mounted.current) setStatusState({ text, tone });
+    }, []);
+
+    const checkHealth = useCallback(async () => {
+        try {
+            const data = await biometricCaptureApi.health();
+            if (mounted.current) setHealth(data?.status === "ok" ? "ok" : "down");
+            return data?.status === "ok";
+        } catch {
+            if (mounted.current) setHealth("down");
+            return false;
+        }
+    }, []);
+
+    useEffect(() => {
+        checkHealth();
+    }, [checkHealth]);
+
+    const refreshSummary = useCallback(async () => {
+        if (!person?.personId) {
+            setSummary(null);
+            return null;
+        }
+        try {
+            const data = await biometricCaptureApi.summary(person.personId);
+            if (mounted.current) setSummary(data);
+            return data;
+        } catch (e) {
+            if (mounted.current) setStatus(e.message, "error");
+            return null;
+        }
+    }, [person, setStatus]);
+
+    useEffect(() => {
+        refreshSummary();
+    }, [refreshSummary]);
+
+    const refreshConsent = useCallback(async () => {
+        if (!person?.personId) {
+            setBiometricAuthorized(null);
+            return null;
+        }
+        try {
+            const consent = await consentApi.get(person.personId);
+            const authorized = consent?.biometricAuthorized === true;
+            if (mounted.current) setBiometricAuthorized(authorized);
+            return authorized;
+        } catch {
+            // Sin respuesta de identity no se ofrece la captura: el servidor la rechazaría (428/503).
+            if (mounted.current) setBiometricAuthorized(false);
+            return false;
+        }
+    }, [person]);
+
+    useEffect(() => {
+        refreshConsent();
+    }, [refreshConsent]);
+
+    const refreshTermsPending = useCallback(async () => {
+        if (!person?.personId) {
+            setTermsPending(null);
+            return null;
+        }
+        try {
+            const resolved = resolveTermsGate(await termsApi.get(person.personId));
+            const pending = resolved.gate === TERMS_GATE.NONE ? null : resolved;
+            if (mounted.current) setTermsPending(pending);
+            return pending;
+        } catch {
+            // Sin respuesta no se bloquea la UI: el servidor sigue siendo quien decide (403/503).
+            if (mounted.current) setTermsPending(null);
+            return null;
+        }
+    }, [person]);
+
+    useEffect(() => {
+        refreshTermsPending();
+    }, [refreshTermsPending]);
+
+    const setPerson = useCallback((selected) => {
+        setPersonState(selected ?? null);
+    }, []);
+
+    /** Ejecuta una operación con bloqueo anti doble envío y reporte de errores unificado. */
+    const run = useCallback(
+        async (operation) => {
+            if (busy) return;
+            setBusy(true);
+            try {
+                await operation();
+            } catch (e) {
+                if (e?.code === PERSON_NOT_ENABLED) {
+                    // Los términos cambiaron desde que se abrió el modal: se muestra el paso pendiente.
+                    setStatus(t("La persona aún no está habilitada para usar la biometría."), "error");
+                    await refreshTermsPending();
+                } else {
+                    setStatus(e?.message || t("Error de solicitud"), "error");
+                }
+            } finally {
+                if (mounted.current) setBusy(false);
+            }
+        },
+        [busy, setStatus, t, refreshTermsPending]
+    );
+
+    const requirePersonId = useCallback(() => {
+        if (!person?.personId) throw new Error(t("Selecciona una persona."));
+        return person.personId;
+    }, [person, t]);
+
+    // Registra la autorización biométrica (propia o asistida por el admin) y habilita la captura.
+    // Debe ir después de `run` y `requirePersonId`: sus dependencias se leen al renderizar.
+    const authorizeBiometrics = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await consentApi.accept(personId, { biometricAccepted: true });
+                setStatus(t("Autorización biométrica registrada."), "ok");
+                await refreshConsent();
+            }),
+        [run, requirePersonId, setStatus, refreshConsent, t]
+    );
+
+    const checkPerson = useCallback(
+        () =>
+            run(async () => {
+                requirePersonId();
+                setStatus(t("Consultando persona..."));
+                const data = await refreshSummary();
+                setStatus(
+                    `${t("rostro")}: ${data?.has_face ? t("sí") : t("no")}, ${t("huella")}: ${
+                        data?.has_fingerprint ? t("sí") : t("no")
+                    }`
+                );
+            }),
+        [run, requirePersonId, setStatus, refreshSummary, t]
+    );
+
+    // Revocar biometría (canDeleteBiometrics, solo admin en UI).
+    const revokeFace = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await biometricCaptureApi.revokeFace(personId);
+                setStatus(t("Rostro revocado."), "ok");
+                await refreshSummary();
+            }),
+        [run, requirePersonId, refreshSummary, setStatus, t]
+    );
+
+    const removeAll = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await biometricCaptureApi.deleteAllBiometrics(personId);
+                setStatus(t("Biometría revocada."), "ok");
+                await refreshSummary();
+            }),
+        [run, requirePersonId, refreshSummary, setStatus, t]
+    );
+
+    return {
+        person,
+        setPerson,
+        requirePersonId,
+        busy,
+        run,
+        status,
+        setStatus,
+        health,
+        checkHealth,
+        summary,
+        refreshSummary,
+        checkPerson,
+        revokeFace,
+        removeAll,
+        biometricAuthorized,
+        refreshConsent,
+        authorizeBiometrics,
+        termsPending,
+        refreshTermsPending,
+    };
+}

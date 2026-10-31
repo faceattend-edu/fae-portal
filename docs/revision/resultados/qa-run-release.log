@@ -1,0 +1,63 @@
+npm notice run FaceAttend-EDU@1.0.0 qa
+npm notice run node tools/qa/run.mjs
+▶ Preflight
+  ✔ 11 contenedores arriba
+  ✔ web http://localhost:8090 responde
+  ✔ gateway http://localhost:8000/api/v1 y login funcionan
+
+▶ L1 · API
+L1 API: 103 PASS · 8 FAIL · 7 DUDA · 25 BLOQUEADO
+  FAIL NEG-A19 [Bloqueante] GET /auth/me → 200 acción prohibida ejecutada · GET /auth/me es público en Kong y devuelve personId, estado y último acceso de cualquier usuario
+  FAIL NEG-B27 [Bloqueante] DELETE /courses/73 → 204 acción prohibida ejecutada
+  FAIL NEG-C03 [Bloqueante] PUT /persons/e91fa255-b786-45c7-b9fb-58a6eae008d9 → 200 acción prohibida ejecutada
+  FAIL NEG-C04 [Bloqueante] PATCH /users/bb02db16-83e2-4891-bda0-fcc9c9c528d2/status → 204 acción prohibida ejecutada
+  FAIL NEG-C17-03 [Bloqueante] PUT /persons/9c2e72e6-7757-45c3-9e18-752eb5ff7d92 → 200 acción prohibida ejecutada
+  FAIL NEG-C17-04 [Bloqueante] PATCH /users/c5c08567-bc84-4349-9184-c12a13dd521b/status → 204 acción prohibida ejecutada
+  FAIL NEG-D02 [Alta] POST /persons → 201 entrada inválida aceptada
+  FAIL NEG-D10 [Alta] POST /persons → 500 error 5xx
+
+▶ L2 · UI
+  Admin /app → PASS
+  Admin /app/users → PASS
+  Admin /app/users/students → PASS
+  Admin /app/users/teachers → PASS
+  Admin /app/users/admins → PASS
+  Admin /app/courses → PASS
+  Admin /app/environments → PASS
+  Admin /app/academic → PASS
+  Admin /app/history → PASS
+  Admin /app/justifications → PASS
+  Admin /app/alerts → PASS
+  Admin /app/reports → PASS
+  Admin /app/settings → PASS
+  Admin /app/kiosk → PASS
+  Admin /app/schools → PASS
+  Admin /app/roles → PASS
+  Admin /app/biometrics → DUDA
+  Admin /app/contacts → DUDA
+  Admin /app/school-info → DUDA
+  Docente /app → PASS
+  Docente /app/users → PASS
+  Docente /app/courses → PASS
+  Docente /app/environments → PASS
+  Docente /app/history → PASS
+  Docente /app/justifications → PASS
+  Docente /app/alerts → PASS
+  Docente /app/reports → PASS
+  Docente /app/settings → PASS
+  Docente /app/kiosk → PASS
+  Docente /app/schools → PASS
+  Docente /app/roles → PASS
+  Docente /app/academic → PASS
+  Docente /app/users/teachers → DUDA
+  Docente /app/users/admins → DUDA
+  Docente /app/biometrics → DUDA
+  Docente /app/contacts → DUDA
+  Docente /app/school-info → DUDA
+L2 UI: 31 PASS · 2 FAIL · 8 DUDA · 0 BLOQUEADO
+  FAIL L2-SUP-login [Bloqueante] no llegó a /app tras iniciar sesión (URL: http://localhost:8090/login)
+  FAIL L2-EST-login [Bloqueante] no llegó a /app tras iniciar sesión (URL: http://localhost:8090/login)
+
+■ Resumen: 134 PASS · 10 FAIL · 15 DUDA · 25 BLOQUEADO
+  docs/revision/resultados/RESUMEN.md
+exit=1

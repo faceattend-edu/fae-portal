@@ -1,0 +1,44 @@
+# =========================================================================
+# FaceAttend EDU — fae-portal overlay TLS con Caddy 2 (Let's Encrypt)
+# =========================================================================
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
+# =========================================================================
+
+services:
+
+  frontend-web:
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.8-alpine@sha256:880f181c36dc83a4769262eb3661bbba8e918e5ef050a2be374e2a027ba5d952
+    container_name: fae-caddy
+    depends_on:
+      frontend-web:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required for TLS (ej. faceattend.tu-dominio.com)}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required for Let's Encrypt notifications}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      fae-edge:
+        ipv4_address: 10.204.10.101
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+volumes:
+  caddy_data:
+  caddy_config:

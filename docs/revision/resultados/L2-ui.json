@@ -1,0 +1,722 @@
+{
+  "title": "L2 · Humo de interfaz por rol",
+  "totals": {
+    "PASS": 63,
+    "FAIL": 0,
+    "DUDA": 16,
+    "BLOQUEADO": 0
+  },
+  "rows": [
+    {
+      "id": "L2-SUP-login",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin",
+      "request": "118 peticiones",
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "L2-SUP-/app",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app",
+      "request": "0 peticiones · 2427 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/schools",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/schools",
+      "request": "1 peticiones · 2416 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/users",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/users",
+      "request": "1 peticiones · 2429 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/users/students",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/users/students",
+      "request": "1 peticiones · 2663 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/users/teachers",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/users/teachers",
+      "request": "1 peticiones · 2428 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/users/admins",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/users/admins",
+      "request": "1 peticiones · 2662 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/roles",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/roles",
+      "request": "6 peticiones · 2414 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/reports",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/reports",
+      "request": "0 peticiones · 2668 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/history",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/history",
+      "request": "1 peticiones · 2664 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/alerts",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/alerts",
+      "request": "2 peticiones · 2425 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/settings",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/settings",
+      "request": "0 peticiones · 2416 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-SUP-/app/courses",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/courses",
+      "request": "1 peticiones · 2402 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-SUP-/app/environments",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/environments",
+      "request": "0 peticiones · 2417 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-SUP-/app/academic",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/academic",
+      "request": "0 peticiones · 2412 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-SUP-/app/justifications",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Super Admin · /app/justifications",
+      "request": "0 peticiones · 2418 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-SUP-/app/kiosk",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Super Admin · /app/kiosk",
+      "request": "0 peticiones · 2416 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-SUP-/app/biometrics",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Super Admin · /app/biometrics",
+      "request": "1 peticiones · 2416 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-SUP-/app/contacts",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Super Admin · /app/contacts",
+      "request": "0 peticiones · 2664 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-SUP-/app/school-info",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Super Admin · /app/school-info",
+      "request": "1 peticiones · 2662 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-SUP-/app/ruta-que-no-existe",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Super Admin · /app/ruta-que-no-existe",
+      "request": "0 peticiones · 2651 ms",
+      "evidence": "Admin FaceAttend Super Admin  Inicio   Escuelas   Historial   Usuarios   Estudiantes  Prof",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-ADM-login",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin",
+      "request": "25 peticiones",
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "L2-ADM-/app",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app",
+      "request": "0 peticiones · 2424 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/users",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/users",
+      "request": "0 peticiones · 2661 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/users/students",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/users/students",
+      "request": "0 peticiones · 2415 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/users/teachers",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/users/teachers",
+      "request": "0 peticiones · 2412 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/users/admins",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/users/admins",
+      "request": "0 peticiones · 2432 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/courses",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/courses",
+      "request": "0 peticiones · 2406 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/environments",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/environments",
+      "request": "0 peticiones · 2431 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/academic",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/academic",
+      "request": "1 peticiones · 2414 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/history",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/history",
+      "request": "1 peticiones · 2927 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/justifications",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/justifications",
+      "request": "5 peticiones · 3723 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/alerts",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/alerts",
+      "request": "2 peticiones · 2418 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/reports",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/reports",
+      "request": "0 peticiones · 2652 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/settings",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/settings",
+      "request": "2 peticiones · 2657 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/kiosk",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/kiosk",
+      "request": "0 peticiones · 2675 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-ADM-/app/schools",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/schools",
+      "request": "1 peticiones · 2406 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-ADM-/app/roles",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Admin · /app/roles",
+      "request": "0 peticiones · 2433 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-ADM-/app/biometrics",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Admin · /app/biometrics",
+      "request": "1 peticiones · 2657 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-ADM-/app/contacts",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Admin · /app/contacts",
+      "request": "1 peticiones · 2919 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-ADM-/app/school-info",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Admin · /app/school-info",
+      "request": "1 peticiones · 2413 ms",
+      "evidence": "Fermín Beltrán Barragán Admin de sede  Inicio   Historial   Justificaciones   Usuarios   Es",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-DOC-login",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente",
+      "request": "59 peticiones",
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "L2-DOC-/app",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app",
+      "request": "0 peticiones · 2411 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/users",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/users",
+      "request": "0 peticiones · 2655 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/courses",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/courses",
+      "request": "0 peticiones · 2406 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/environments",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/environments",
+      "request": "0 peticiones · 2431 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/history",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/history",
+      "request": "1 peticiones · 2672 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/justifications",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/justifications",
+      "request": "6 peticiones · 3715 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/alerts",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/alerts",
+      "request": "2 peticiones · 2427 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/reports",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/reports",
+      "request": "0 peticiones · 2425 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/settings",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/settings",
+      "request": "0 peticiones · 2416 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/kiosk",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/kiosk",
+      "request": "0 peticiones · 2424 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-DOC-/app/schools",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/schools",
+      "request": "1 peticiones · 2655 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-DOC-/app/roles",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/roles",
+      "request": "0 peticiones · 2656 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-DOC-/app/academic",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Docente · /app/academic",
+      "request": "0 peticiones · 2422 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-DOC-/app/users/teachers",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Docente · /app/users/teachers",
+      "request": "0 peticiones · 2420 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-DOC-/app/users/admins",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Docente · /app/users/admins",
+      "request": "0 peticiones · 2665 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-DOC-/app/biometrics",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Docente · /app/biometrics",
+      "request": "1 peticiones · 2648 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-DOC-/app/contacts",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Docente · /app/contacts",
+      "request": "1 peticiones · 2431 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-DOC-/app/school-info",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Docente · /app/school-info",
+      "request": "1 peticiones · 2417 ms",
+      "evidence": "María Sánchez Urbina Docente  Inicio   Historial   Justificaciones   Alumnos   Estudiantes ",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-EST-login",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante",
+      "request": "70 peticiones",
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "L2-EST-/app",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app",
+      "request": "0 peticiones · 2415 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/history",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/history",
+      "request": "1 peticiones · 2678 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/justifications",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/justifications",
+      "request": "5 peticiones · 3447 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/courses",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/courses",
+      "request": "0 peticiones · 2417 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/academic",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/academic",
+      "request": "1 peticiones · 2652 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/alerts",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/alerts",
+      "request": "2 peticiones · 2420 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/settings",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/settings",
+      "request": "0 peticiones · 2414 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido"
+    },
+    {
+      "id": "L2-EST-/app/users",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/users",
+      "request": "0 peticiones · 2656 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/users/students",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/users/students",
+      "request": "0 peticiones · 2406 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/environments",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/environments",
+      "request": "0 peticiones · 2417 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/reports",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/reports",
+      "request": "0 peticiones · 2405 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/kiosk",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/kiosk",
+      "request": "0 peticiones · 2434 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/schools",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/schools",
+      "request": "0 peticiones · 2423 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/roles",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/roles",
+      "request": "0 peticiones · 2418 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/settings/general",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Estudiante · /app/settings/general",
+      "request": "0 peticiones · 2660 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-EST-/app/biometrics",
+      "verdict": "PASS",
+      "severity": "",
+      "who": "Estudiante · /app/biometrics",
+      "request": "0 peticiones · 2651 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "Acceso denegado"
+    },
+    {
+      "id": "L2-EST-/app/contacts",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Estudiante · /app/contacts",
+      "request": "1 peticiones · 2419 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    },
+    {
+      "id": "L2-EST-/app/school-info",
+      "verdict": "DUDA",
+      "severity": "",
+      "who": "Estudiante · /app/school-info",
+      "request": "1 peticiones · 2654 ms",
+      "evidence": "Valentina García Ortiz Estudiante  Inicio   Historial   Justificaciones   Mis cursos   Acad",
+      "note": "con contenido · carga con contenido (sin expectativa definida)"
+    }
+  ]
+}
